@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>cas</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      background: #09090b;
+      color: #fff;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      gap: 12px;
+    }
+
+    .text {
+      font-size: 18px;
+      letter-spacing: 4px;
+      font-weight: 300;
+      opacity: 0.9;
+      text-transform: lowercase;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .status {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #52525b;
+      text-transform: uppercase;
+      font-weight: 400;
+    }
+
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #09090b;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      cursor: pointer;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+
+    #overlay span {
+      color: #71717a;
+      font-size: 14px;
+      letter-spacing: 2px;
+      font-weight: 300;
+      transition: color 0.3s ease, transform 0.3s ease;
+    }
+
+    #overlay:hover span {
+      color: #f4f4f5;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="overlay" onclick="startExperience()">
+    <span>click to enter</span>
+  </div>
+
+  <canvas id="ambientCanvas"></canvas>
+
+  <div class="container">
+    <div class="text">cas</div>
+    <div class="status" id="audioStatus">paused</div>
+  </div>
+
+  <audio id="bgMusic" src="jaydes.mp3" loop preload="auto"></audio>
+
+  <script>
+    // Disable right-click & common inspection hotkeys
+    document.addEventListener("contextmenu", (e) => e.preventDefault());
+    document.addEventListener("keydown", (e) => {
+      if (
+        e.key === "F12" ||
+        (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key.toUpperCase())) ||
+        (e.ctrlKey && e.key.toUpperCase() === "U")
+      ) {
+        e.preventDefault();
+      }
+    });
+
+    let isPlaying = false;
+    const music = document.getElementById("bgMusic");
+    const statusText = document.getElementById("audioStatus");
+
+    function startExperience() {
+      if (isPlaying) return;
+      isPlaying = true;
+
+      const overlay = document.getElementById("overlay");
+      overlay.style.opacity = "0";
+      overlay.style.visibility = "hidden";
+
+      music.play().then(() => {
+        statusText.textContent = "playing";
+      }).catch((error) => {
+        console.log("Audio playback error:", error);
+        statusText.textContent = "audio error";
+      });
+    }
+
+    // Interactive ambient canvas animation
+    const canvas = document.getElementById("ambientCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let width, height;
+    let mouse = { x: 0, y: 0 };
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      mouse.x = width / 2;
+      mouse.y = height / 2;
+    }
+
+    window.addEventListener("resize", resize);
+    window.addEventListener("mousemove", (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    resize();
+
+    let step = 0;
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      step += 0.01;
+
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
+      ctx.lineWidth = 1;
+
+      for (let i = 0; i < width; i += 20) {
+        const y = height / 2 + Math.sin(step + i * 0.005) * 30 + (mouse.y - height / 2) * 0.05;
+        if (i === 0) ctx.moveTo(i, y);
+        else ctx.lineTo(i, y);
+      }
+      ctx.stroke();
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>
